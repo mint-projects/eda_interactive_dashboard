@@ -93,7 +93,7 @@ def convert_to_readable_time(t):
 
 @st.cache_data
 def load_grouped_data():
-
+    data = pd.DataFrame()
     base_path = os.path.dirname(__file__)
     path = os.path.join(base_path, "data", "age_grouped_screentime.csv")
     if not os.path.exists(path):
@@ -120,10 +120,13 @@ def load_grouped_data():
 def load_data():
     base_path = os.path.dirname(__file__)
     path = os.path.join(base_path, "data", "clean_data.csv")
+    data = pd.DataFrame()
     try:
         data = pd.read_csv(path)
-    except FileNotFoundError as e:
-        print(f"File not found: {e}")
+    except FileNotFoundError:
+        st.error(f"File not found: {path}")
+    except Exception as e:
+        st.error(f"Error: {e}")
     return data
 
 
