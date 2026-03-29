@@ -3,9 +3,14 @@ import pandas as pd
 import plotly.express as px
 import os
 from math import floor
+import pickle
+import numpy as np
+import time
 
 
 st.set_page_config(page_title="Smartphone Addiction EDA", layout="wide")
+
+current_dir = os.getcwd()
 
 
 def apply_custom_style():
@@ -31,7 +36,7 @@ def apply_custom_style():
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        header {visibility: hidden;}
+       /*header {visibility: hidden;}*/
         
         h1, h2, h3, p, span, label {
             color: #e0e0e0 !important;
@@ -60,6 +65,23 @@ def apply_custom_style():
     """,
         unsafe_allow_html=True,
     )
+
+
+@st.cache_data
+def load_model():
+    path = os.path.join(current_dir, "model", "model.pkl")
+    try:
+        with open(path, "rb") as f:
+            model = pickle.load(f)
+        return model
+    except FileNotFoundError:
+        st.error(f"Model file not found at {path}. Check your file structure.")
+    except (pickle.UnpicklingError, EOFError):
+        st.error("Model file is corrupted or not a valid pickle file.")
+    except ModuleNotFoundError as e:
+        st.error(f"Missing library required to load model: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred while loading the model: {e}")
 
 
 def convert_to_readable_time(t):
@@ -94,6 +116,79 @@ def load_grouped_data():
     return data
 
 
+def render_model_site():
+
+    model = load_model()
+
+    daily = st.number_input(
+        label="How many hours daily do you spend on your phone?",
+        min_value=0.0,
+        max_value=24.0,
+        value=2.0,
+        step=0.5,
+    )
+
+    weekend = st.number_input(
+        label="What is your weekend screentime?",
+        min_value=0.0,
+        max_value=24.0,
+        value=2.0,
+        step=0.5,
+    )
+
+    social = st.number_input(
+        label="How many hours daily do you spend on social media?",
+        min_value=0.0,
+        max_value=24.0,
+        value=2.0,
+        step=0.5,
+    )
+
+    data = np.array([[social, daily, weekend]])
+
+    addiction_percentage = model.predict_proba(data)[0, 1]
+    addiction_percentage = float(addiction_percentage * 100)
+    placeholder = st.empty()
+
+    with placeholder.container():
+        st.write("🔍 Analyzing your habits...")
+        progress_bar = st.progress(0)
+        for i in range(100):
+            time.sleep(0.01)
+            progress_bar.progress(i + 1)
+
+    if addiction_percentage < 10:
+        msg = "✅ **Ultra Low Risk:** Your habits are looking incredibly healthy."
+    elif addiction_percentage < 20:
+        msg = "🟢 **Low Risk:** You've got a great balance going."
+    elif addiction_percentage < 30:
+        msg = "🟡 **Mild:** Slightly elevated, but nothing to worry about."
+    elif addiction_percentage < 40:
+        msg = "🟠 **Moderate:** You're approaching the average usage levels."
+    elif addiction_percentage < 50:
+        msg = "⚠️ **Borderline:** You are right on the edge of a high-impact lifestyle."
+    elif addiction_percentage < 60:
+        msg = "⚖️ **Tipping Point:** The model leans slightly toward High Impact."
+    elif addiction_percentage < 70:
+        msg = "🚩 **Noticeable:** Your screen time is starting to dominate your day."
+    elif addiction_percentage < 80:
+        msg = (
+            "🔥 **High Impact:** The data shows a strong correlation with high stress."
+        )
+    elif addiction_percentage < 90:
+        msg = "🚨 **Significant:** Very high probability of academic/work impact."
+    else:
+        msg = "🛑 **Critical:** Your digital habits are in the top tier of impact."
+
+    with placeholder.container():
+        st.divider()
+        st.subheader(f"Result: {addiction_percentage}% probability of addiction")
+        st.markdown(f"### {msg}")
+        st.info(
+            "Note: this is just a simple machine learning model trained on a small Kaggle dataset and should not be treated as professional or medical advice"
+        )
+
+
 def render_avg_dashboard():
     with st.sidebar:
         st.subheader("Settings")
@@ -114,16 +209,21 @@ def render_avg_dashboard():
         "Overall daily screen time": (
             "daily_screen_time_hours",
             "#E260D1",
-            "Total Usage",
+            "Total Usage time",
             "daily_avg_text",
         ),
         "Social media screen time": (
             "social_media_hours",
             "#00d2ff",
-            "Social Media",
+            "Social Media usage time",
             "social_avg_text",
         ),
-        "Gaming screen time": ("gaming_hours", "#3aff6d", "Gaming", "gaming_avg_text"),
+        "Gaming screen time": (
+            "gaming_hours",
+            "#3aff6d",
+            "Gaming time",
+            "gaming_avg_text",
+        ),
         "Work/study screen time": (
             "work_study_hours",
             "#ffbd3f",
@@ -153,6 +253,7 @@ def render_avg_dashboard():
                 plot_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=0, r=0, t=20, b=0),
                 height=350,
+                yaxis_range=[0, 10],
             )
             fig.update_traces(
                 marker_color=color,
@@ -222,17 +323,17 @@ def main():
                 st.session_state.page = "sex"
                 st.rerun()
             if st.button("Addiction checker"):
-                st.session_state.page = "xgb"
+                st.session_state.page = "rf"
                 st.rerun()
 
     if st.session_state.page == "main":
-        st.write("Rendering main page")
+        st.write(current_dir)
     elif st.session_state.page == "avg":
         render_avg_dashboard()
     elif st.session_state.page == "sex":
         st.write("Rendering sex comparison dashboard")
-    elif st.session_state.page == "xgb":
-        st.write("Rendering model")
+    elif st.session_state.page == "rf":
+        render_model_site()
 
 
 if __name__ == "__main__":
