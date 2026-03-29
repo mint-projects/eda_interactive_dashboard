@@ -116,7 +116,181 @@ def load_grouped_data():
     return data
 
 
+@st.cache_data
+def load_data():
+    base_path = os.path.dirname(__file__)
+    path = os.path.join(base_path, "data", "clean_data.csv")
+    try:
+        data = pd.read_csv(path)
+    except FileNotFoundError as e:
+        print(f"File not found: {e}")
+    return data
+
+
+def render_gender_dashboard():
+    st.title("👫 Gender-Based Usage Analysis")
+
+    st.markdown(
+        """
+        <style>
+        .gender-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        </style>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    try:
+        data = load_data()
+        color_map = {"Female": "#E260D1", "Male": "#00d2ff", "Other": "#3aff6d"}
+
+        def create_gender_donut(df, column, title):
+            avg_df = df.groupby("gender")[[column]].mean().reset_index()
+
+            fig = px.pie(
+                avg_df,
+                values=column,
+                names="gender",
+                hole=0.3,
+                template="plotly_dark",
+                color="gender",
+                color_discrete_map=color_map,
+            )
+
+            fig.update_layout(
+                title={
+                    "text": f"<b>{title}</b>",
+                    "y": 0.9,
+                    "x": 0.5,
+                    "xanchor": "center",
+                    "yanchor": "top",
+                },
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                showlegend=True,
+                legend=dict(
+                    orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5
+                ),
+                margin=dict(l=20, r=20, t=50, b=20),
+                height=350,
+            )
+
+            fig.update_traces(
+                textposition="inside",
+                textinfo="percent",
+                marker=dict(line=dict(color="rgba(0,0,0,0)", width=0)),
+                hovertemplate="<b>%{label}</b><br>Avg: %{value:.2f}h<extra></extra>",
+            )
+            return fig
+
+        row1_left, row1_right = st.columns(2)
+        row2_left, row2_right = st.columns(2)
+
+        with row1_left:
+            st.plotly_chart(
+                create_gender_donut(
+                    data, "daily_screen_time_hours", "Daily Usage Total"
+                ),
+                use_container_width=True,
+            )
+
+        with row1_right:
+            st.plotly_chart(
+                create_gender_donut(data, "social_media_hours", "Social Media Impact"),
+                use_container_width=True,
+            )
+
+        with row2_left:
+            st.plotly_chart(
+                create_gender_donut(data, "gaming_hours", "Gaming Habits"),
+                use_container_width=True,
+            )
+
+        with row2_right:
+            st.plotly_chart(
+                create_gender_donut(data, "work_study_hours", "Productive Usage"),
+                use_container_width=True,
+            )
+
+    except Exception as e:
+        st.error(f"Error: {e}")
+
+
+def render_main():
+
+    st.markdown(
+        """
+        <div style="text-align: center; padding: 40px 0px;">
+            <h1 style="font-size: 3.5rem; margin-bottom: 10px;">📱 Smartphone addiction analysis </h1>
+            <p style="font-size: 1.2rem; color: #b0b0b0;">Decoding the impact of smartphone habits on our daily lives.</p>
+        </div>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.markdown("### 🔍 Project Overview")
+        st.write(
+            """
+        Welcome to the **Smartphone Addiction Analysis Dashboard**. This project explores 
+        how different demographic factors—like age and gender influence our digital 
+        consumption. 
+        """
+        )
+
+        st.markdown("---")
+
+        st.markdown("### 🛠️ What can you do here?")
+
+        f1, f2, f3 = st.columns(3)
+        with f1:
+            st.info(
+                "**Exploratory Data Analysis**\n\nDive into interactive charts to see how screen time varies across age groupos."
+            )
+        with f2:
+            st.success(
+                "**Gender Insights**\n\nCompare usage patterns between Male, Female, and Other categories."
+            )
+
+        with f3:
+            st.warning(
+                "**Addiction Checker**\n\nInput your own data and let our Random Forest model predict your addiction risk."
+            )
+
+    with col2:
+        st.markdown("### 📊 Dataset Info")
+        st.markdown(
+            """
+        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
+            <p><strong>Source:</strong> 
+                <a href="https://www.kaggle.com/datasets/algozee/smartphone-usage-and-addiction-analysis-dataset" 
+                target="_blank" 
+                style="color: #00d2ff; text-decoration: none; font-weight: bold;">
+                Kaggle Dataset 🔗
+                </a>
+            </p>
+            <p><strong>Entries:</strong> 7500 unique records</p>
+            <p><strong>Target:</strong> addicted_label (Binary)</p>
+            <p><strong>Model:</strong> Random Forest Classifier</p>
+        </div>
+        """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.divider()
+    st.caption("👈 Use the sidebar to navigate between the different analysis modules.")
+
+
 def render_model_site():
+    st.title("💉 Addiction checker")
 
     model = load_model()
 
@@ -203,7 +377,7 @@ def render_avg_dashboard():
         )
         st.info("Tip: Use the charts to explore trends across different age groups.")
 
-    st.title("📱 Smartphone Addiction Analysis")
+    st.title("👴👶 Statistics with respect to age")
 
     var_map = {
         "Overall daily screen time": (
@@ -238,6 +412,7 @@ def render_avg_dashboard():
 
     try:
         df_grouped = load_grouped_data()
+        df = load_data()
 
         with row1_left:
             st.subheader(f"Average {display_title}")
@@ -288,14 +463,33 @@ def render_avg_dashboard():
 
         with row2_right:
             st.subheader("Distribution")
-            fig_pie = px.pie(df_grouped, values=col_name, names="age", hole=0.4)
-            fig_pie.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=0, r=0, t=20, b=0),
-                height=250,
-                showlegend=False,
+            fig_hist = px.histogram(
+                df, x="daily_screen_time_hours", nbins=24, template="plotly_dark"
             )
-            st.plotly_chart(fig_pie, use_container_width=True)
+            fig_hist.update_traces(
+                xbins=dict(start=0.0, end=24.0, size=0.5),
+                marker_line_width=1,
+                marker_color="orange",
+                marker_line_color="rgba(255, 255, 255, 0.1)",
+            )
+
+            fig_hist.update_layout(
+                xaxis=dict(
+                    tickmode="linear",
+                    tick0=0,
+                    dtick=1,
+                    range=[0, 24],
+                ),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                margin=dict(l=10, r=10, t=30, b=10),
+                height=350,
+                hovermode="x unified",
+            )
+
+            st.plotly_chart(
+                fig_hist, use_container_width=True, config={"displayModeBar": False}
+            )
 
     except Exception as e:
         st.error(f"Error loading data: {e}")
@@ -306,6 +500,7 @@ def main():
 
     if "page" not in st.session_state:
         st.session_state.page = "main_dashboard"
+        render_main()
 
     with st.sidebar:
         st.title("📊 Dashboard")
@@ -319,19 +514,19 @@ def main():
             if st.button("Average stats"):
                 st.session_state.page = "avg"
                 st.rerun()
-            if st.button("Sex comparison"):
-                st.session_state.page = "sex"
+            if st.button("Gender comparison"):
+                st.session_state.page = "gender"
                 st.rerun()
             if st.button("Addiction checker"):
                 st.session_state.page = "rf"
                 st.rerun()
 
     if st.session_state.page == "main":
-        st.write(current_dir)
+        render_main()
     elif st.session_state.page == "avg":
         render_avg_dashboard()
-    elif st.session_state.page == "sex":
-        st.write("Rendering sex comparison dashboard")
+    elif st.session_state.page == "gender":
+        render_gender_dashboard()
     elif st.session_state.page == "rf":
         render_model_site()
 
