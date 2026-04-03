@@ -235,6 +235,23 @@ def render_main():
     """,
         unsafe_allow_html=True,
     )
+    df = load_data()
+
+    if not df.empty:
+        st.markdown("### 📈 Data at a Glance")
+        m1, m2, m3, m4 = st.columns(4)
+
+        avg_screen_time = df["daily_screen_time_hours"].mean()
+        avg_age = df["age"].mean()
+        high_risk_pct = (df["addicted_label"].sum() / len(df)) * 100
+        most_common_gender = df["gender"].mode()[0]
+
+        m1.metric("Avg. Screen Time", f"{avg_screen_time:.1f}h")
+        m2.metric("Average Age", f"{avg_age:.1f} yrs")
+        m3.metric("Addiction Rate", f"{high_risk_pct:.1f}%")
+        m4.metric("Top User Group", most_common_gender)
+
+        st.markdown("<br>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 1])
 
