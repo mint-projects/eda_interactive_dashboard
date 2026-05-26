@@ -23,3 +23,12 @@ Deployment notes
 - Ensure `model/model.pkl` and `data/` are available to the deployment environment. If you prefer not to commit model artifacts, store them in external storage and fetch during deploy.
 
 If deployment still fails, share the platform logs and I will diagnose further.
+
+## Live demo
+
+The app is deployed at: https://smartphoneaddictioneda.streamlit.app
+
+Preview:
+
+![App preview](data/sample.png)
+
