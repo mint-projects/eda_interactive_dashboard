@@ -1,36 +1,25 @@
-## 🚧 Progress / TODO
+# Smartphone Addiction EDA Dashboard
 
-### ✅ Done
-- [x] Basic Streamlit layout
-- [x] Navigation with buttons
-- [x] Average statistics dashboard (little fixes needed)
-- [x] Y axis corrected
-- [x] Model implemented
+Project reorganized for a clearer layout and deployments.
 
-
-### 📌 TODO
-- Replace the pie chart (it brings no value to analysis)
-- Perform EDA regarding user's sex
-- Write the main page content
-- eventually deploy (last step)
-
-## Project layout (restructured)
-
-The repository was reorganized to a more conventional layout:
-
-- `src/eda_dashboard/` : Python package containing the Streamlit app (`app.py`).
+Layout
+- `app.py` : root entrypoint delegating to the package (for Streamlit hosting).
+- `src/eda_dashboard/app.py` : main Streamlit application (package location).
 - `data/` : CSV datasets used by the app.
-- `model/` : serialized model (`model.pkl`).
-- `notebooks/` : exploratory notebooks (`model.ipynb`, `visualization.ipynb`).
-- `requirements.txt` : project dependencies.
+- `model/` : serialized model file (`model.pkl`).
+- `notebooks/` : exploratory notebooks.
 
-Run the Streamlit app from the project root:
-
+Run locally
 ```powershell
+# recommended (root entrypoint)
+streamlit run app.py
+
+# or directly run the package script
 streamlit run src/eda_dashboard/app.py
 ```
 
-If you'd like, I can also:
-- add a `scripts/` folder with run helpers
-- add basic `pyproject.toml` or `setup.cfg` for packaging
-- move `model/` into `src/eda_dashboard/` if you prefer a single-package layout
+Deployment notes
+- If your hosting provider expects a repository-root `app.py`, the included root `app.py` ensures compatibility.
+- Ensure `model/model.pkl` and `data/` are available to the deployment environment. If you prefer not to commit model artifacts, store them in external storage and fetch during deploy.
+
+If deployment still fails, share the platform logs and I will diagnose further.

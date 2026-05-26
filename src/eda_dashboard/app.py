@@ -9,7 +9,6 @@ import time
 
 st.set_page_config(page_title="Smartphone Addiction EDA", layout="wide")
 
-# project_root is the repository root (two levels up from this file)
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
