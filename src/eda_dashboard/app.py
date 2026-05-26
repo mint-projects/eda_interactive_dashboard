@@ -7,10 +7,10 @@ import pickle
 import numpy as np
 import time
 
-
 st.set_page_config(page_title="Smartphone Addiction EDA", layout="wide")
 
-current_dir = os.getcwd()
+# project_root is the repository root (two levels up from this file)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 def apply_custom_style():
@@ -69,7 +69,7 @@ def apply_custom_style():
 
 @st.cache_data
 def load_model():
-    path = os.path.join(current_dir, "model", "model.pkl")
+    path = os.path.join(PROJECT_ROOT, "model", "model.pkl")
     try:
         with open(path, "rb") as f:
             model = pickle.load(f)
@@ -94,8 +94,7 @@ def convert_to_readable_time(t):
 @st.cache_data
 def load_grouped_data():
     data = pd.DataFrame()
-    base_path = os.path.dirname(__file__)
-    path = os.path.join(base_path, "data", "age_grouped_screentime.csv")
+    path = os.path.join(PROJECT_ROOT, "data", "age_grouped_screentime.csv")
     if not os.path.exists(path):
 
         return pd.DataFrame(
@@ -118,8 +117,7 @@ def load_grouped_data():
 
 @st.cache_data
 def load_data():
-    base_path = os.path.dirname(__file__)
-    path = os.path.join(base_path, "data", "clean_data.csv")
+    path = os.path.join(PROJECT_ROOT, "data", "clean_data.csv")
     data = pd.DataFrame()
     try:
         data = pd.read_csv(path)
@@ -257,13 +255,11 @@ def render_main():
 
     with col1:
         st.markdown("### 🔍 Project Overview")
-        st.write(
-            """
+        st.write("""
         Welcome to the **Smartphone Addiction Analysis Dashboard**. This project explores 
         how different demographic factors—like age and gender influence our digital 
         consumption. 
-        """
-        )
+        """)
 
         st.markdown("---")
 
@@ -466,11 +462,9 @@ def render_avg_dashboard():
             c1.metric("Peak Usage", f"{max_val:.1f}h")
             c2.metric("Average", f"{avg_val:.1f}h")
 
-            st.markdown(
-                f"""
+            st.markdown(f"""
             💡 **Observation:** The highest addiction levels for **{display_title.lower()}** are seen in the age group of **{df_grouped.loc[df_grouped[col_name].idxmax(), 'age']}** years old.
-            """
-            )
+            """)
 
         with row2_left:
             st.subheader("Raw Data Preview")
